@@ -8,6 +8,22 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def categories_dict():
+  categories = Category.query.all()
+  categories_dict = {}
+  for category in categories:
+    categories_dict[category.id] = category.type
+  return categories_dict
+
+def pagination_questions(request, selection):
+  page = request.args.get('page', 1, type=int)
+  start = (page - 1) * QUESTIONS_PER_PAGE
+  end = start + QUESTIONS_PER_PAGE
+  questions = selection
+  formatted_questions = [question.format() for question in questions]
+  return formatted_questions[start:end]
+
+
 def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
@@ -24,7 +40,7 @@ def create_app(test_config=None):
   @app.after_request
   def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
     return response
 
   '''
@@ -35,12 +51,9 @@ def create_app(test_config=None):
   @app.route('/categories')
   def get_all_categories():
     try:
-      categories = {
-        'categories': {}
-      }
-      for c in Category.query.all():
-        categories['categories'][c.id] = c.type
-      return jsonify(categories)
+      return jsonify({
+        'categories': categories_dict()
+      })
     except:
       abort(404)
 
@@ -59,23 +72,14 @@ def create_app(test_config=None):
   @app.route('/questions')
   def get_questions():
     try:
-      page = request.args.get('page', 1, type=int)
-      start = (page - 1) * QUESTIONS_PER_PAGE
-      end = start + QUESTIONS_PER_PAGE
-      questions = Question.query.order_by(Question.id).all()
-      categories = {}
-      formatted_questions = [question.format() for question in questions]
-
-      for c in Category.query.all():
-        categories[c.id] = c.type
-
+      selection = Question.query.order_by(Question.id).all()
+      formatted_questions = pagination_questions(request, selection)
       return jsonify({
-        'questions': formatted_questions[start:end],
-        'total_questions': len(formatted_questions),
-        'categories': categories,
+        'questions': formatted_questions,
+        'total_questions': len(selection),
+        'categories': categories_dict(),
         'current_category': 'all'
       })
-
     except:
       abort(404)
 
@@ -93,7 +97,7 @@ def create_app(test_config=None):
       question.delete()
       return jsonify({ 'success': True })
     except:
-      abort(404)
+      abort(422)
 
 
   '''
@@ -106,6 +110,16 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    try:
+      data = request.get_json()
+      question = Question(question=data['question'], answer=data['answer'], 
+                          category=data['category'], difficulty=data['difficulty'])
+      question.insert()
+      return jsonify({ 'success': True })
+    except:
+      abort(422)
 
   '''
   @TODO: 
