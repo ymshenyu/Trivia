@@ -35,9 +35,11 @@ def create_app(test_config=None):
   @app.route('/categories')
   def get_all_categories():
     try:
-      categories = {}
+      categories = {
+        'categories': {}
+      }
       for c in Category.query.all():
-        categories[c.id] = c.type
+        categories['categories'][c.id] = c.type
       return jsonify(categories)
     except:
       abort(404)
@@ -56,24 +58,26 @@ def create_app(test_config=None):
   '''
   @app.route('/questions')
   def get_questions():
-    page = request.args.get('page', 1, type=int)
-    current_category = request.args.get('category', 'all', type=str)
-    start = (page - 1) * QUESTIONS_PER_PAGE
-    end = start + QUESTIONS_PER_PAGE
-    questions = Question.query.all()
-    categories = {}
-    formatted_questions = [question.format() for question in questions]
+    try:
+      page = request.args.get('page', 1, type=int)
+      start = (page - 1) * QUESTIONS_PER_PAGE
+      end = start + QUESTIONS_PER_PAGE
+      questions = Question.query.order_by(Question.id).all()
+      categories = {}
+      formatted_questions = [question.format() for question in questions]
 
-    for c in Category.query.all():
-      categories[c.id] = c.type
+      for c in Category.query.all():
+        categories[c.id] = c.type
 
+      return jsonify({
+        'questions': formatted_questions[start:end],
+        'total_questions': len(formatted_questions),
+        'categories': categories,
+        'current_category': 'all'
+      })
 
-    return jsonify({
-      'questions': formatted_questions[start:end],
-      'total_questions': len(formatted_questions),
-      'categories': categories,
-      'current_category': current_category
-    })
+    except:
+      abort(404)
 
   '''
   @TODO: 
