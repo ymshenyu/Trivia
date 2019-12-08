@@ -23,6 +23,14 @@ def pagination_questions(request, selection):
   formatted_questions = [question.format() for question in questions]
   return formatted_questions[start:end]
 
+def current_category(selection):
+  categories = []
+  for question in selection:
+    category = Category.query.filter(Category.id == question.category).one_or_none()
+    category_type = category.type
+    if category_type not in categories:
+      categories.append(category_type)
+  return categories
 
 def create_app(test_config=None):
   # create and configure the app
@@ -78,7 +86,7 @@ def create_app(test_config=None):
         'questions': formatted_questions,
         'total_questions': len(selection),
         'categories': categories_dict(),
-        'current_category': 'all'
+        'current_category': current_category(selection)
       })
     except:
       abort(404)
@@ -114,23 +122,22 @@ def create_app(test_config=None):
   def create_question():
     try:
       data = request.get_json()
-      question = Question(question=data['question'], answer=data['answer'], 
-                          category=data['category'], difficulty=data['difficulty'])
-      question.insert()
-      return jsonify({ 'success': True })
+      if 'searchTerm' in data:
+        # search questions based on search term
+        selection = Question.query.filter(Question.question.ilike(f"%{data['searchTerm']}%")).order_by(Question.id).all()
+        return jsonify({
+          'questions': pagination_questions(request, selection),
+          'total_questions': len(selection),
+          'current_category': current_category(selection)
+        })
+      else:
+        question = Question(question=data['question'], answer=data['answer'], 
+                            category=data['category'], difficulty=data['difficulty'])
+        question.insert()
+        return jsonify({ 'success': True })
     except:
       abort(422)
 
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
 
   '''
   @TODO: 
