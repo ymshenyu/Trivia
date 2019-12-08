@@ -89,17 +89,18 @@ def create_app(test_config=None):
   '''
   @app.route('/questions')
   def get_all_questions():
-    try:
-      selection = Question.query.order_by(Question.id).all()
-      formatted_questions = pagination_questions(request, selection)
-      return jsonify({
-        'questions': formatted_questions,
-        'total_questions': len(selection),
-        'categories': categories_dict(),
-        'current_category': current_category(selection)
-      })
-    except:
+    selection = Question.query.order_by(Question.id).all()
+    formatted_questions = pagination_questions(request, selection)
+
+    if len(selection) == 0 or len(formatted_questions) == 0:
       abort(404)
+
+    return jsonify({
+      'questions': formatted_questions,
+      'total_questions': len(selection),
+      'categories': categories_dict(),
+      'current_category': current_category(selection)
+    })
 
   '''
   @TODO: 
@@ -115,7 +116,7 @@ def create_app(test_config=None):
       question.delete()
       return jsonify({ 'success': True })
     except:
-      abort(422)
+      abort(405)
 
 
   '''
@@ -130,23 +131,20 @@ def create_app(test_config=None):
   '''
   @app.route('/questions', methods=['POST'])
   def create_question():
-    try:
-      data = request.get_json()
-      if 'searchTerm' in data:
-        # search questions based on search term
-        selection = Question.query.filter(Question.question.ilike(f"%{data['searchTerm']}%")).order_by(Question.id).all()
-        return jsonify({
-          'questions': pagination_questions(request, selection),
-          'total_questions': len(selection),
-          'current_category': current_category(selection)
-        })
-      else:
-        question = Question(question=data['question'], answer=data['answer'], 
-                            category=data['category'], difficulty=data['difficulty'])
-        question.insert()
-        return jsonify({ 'success': True })
-    except:
-      abort(422)
+    data = request.get_json()
+    if 'searchTerm' in data:
+      # search questions based on search term
+      selection = Question.query.filter(Question.question.ilike(f"%{data['searchTerm']}%")).order_by(Question.id).all()
+      return jsonify({
+        'questions': pagination_questions(request, selection),
+        'total_questions': len(selection),
+        'current_category': current_category(selection)
+      })
+    else:
+      question = Question(question=data['question'], answer=data['answer'], 
+                          category=data['category'], difficulty=data['difficulty'])
+      question.insert()
+      return jsonify({ 'success': True })
 
 
   '''
@@ -159,15 +157,17 @@ def create_app(test_config=None):
   '''
   @app.route('/categories/<int:category_id>/questions')
   def get_questions(category_id):
-    try:
-      selection = Question.query.filter(Question.category == category_id).all()
-      return jsonify({
-          'questions': pagination_questions(request, selection),
-          'total_questions': len(selection),
-          'current_category': current_category(selection)
-      })
-    except:
+    selection = Question.query.filter(Question.category == category_id).all()
+    formatted_questions = pagination_questions(request, selection)
+
+    if len(selection) == 0 or len(formatted_questions) == 0:
       abort(404)
+
+    return jsonify({
+      'questions': formatted_questions,
+      'total_questions': len(selection),
+      'current_category': current_category(selection)
+    })
 
 
   '''
@@ -198,8 +198,8 @@ def create_app(test_config=None):
         force_end = True
 
       return jsonify({
-          'question': formatted_question,
-          'forceEnd': force_end
+        'question': formatted_question,
+        'forceEnd': force_end
       })
     except:
       abort(422)
@@ -209,6 +209,37 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'code': 404,
+      'success': False,
+      'message': "The requested resource doesn't exist."
+    }), 404
+  
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+      'code': 422,
+      'success': False,
+      'message': 'unprocessable'
+    })
+
+  @app.errorhandler(405)
+  def method_not_allowed(error):
+    return jsonify({
+      'code': 405,
+      'success': False,
+      'message': 'method not allowed'
+    })
+
+  @app.errorhandler(500)
+  def internal_server_error(error):
+    return jsonify({
+      'code': 500,
+      'success': False,
+      'message': 'internal server error'
+    })
   
   return app
 
