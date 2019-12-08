@@ -78,7 +78,7 @@ def create_app(test_config=None):
   Clicking on the page numbers should update the questions. 
   '''
   @app.route('/questions')
-  def get_questions():
+  def get_all_questions():
     try:
       selection = Question.query.order_by(Question.id).all()
       formatted_questions = pagination_questions(request, selection)
@@ -147,6 +147,17 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:category_id>/questions')
+  def get_questions(category_id):
+    try:
+      selection = Question.query.filter(Question.category == category_id).all()
+      return jsonify({
+          'questions': pagination_questions(request, selection),
+          'total_questions': len(selection),
+          'current_category': current_category(selection)
+      })
+    except:
+      abort(404)
 
 
   '''
