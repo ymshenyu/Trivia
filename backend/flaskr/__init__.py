@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_cors import CORS
 import random
 
@@ -31,6 +32,15 @@ def current_category(selection):
     if category_type not in categories:
       categories.append(category_type)
   return categories
+
+def quiz_question(selection, previous_questions):
+  for question in selection:
+    if question.id not in previous_questions:
+      formatted_question = question.format()
+      break
+    else:
+      formatted_question = None
+  return formatted_question
 
 def create_app(test_config=None):
   # create and configure the app
@@ -171,6 +181,28 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def quiz():
+    try:
+      data = request.get_json()
+      previous_questions = data['previous_questions']
+      force_end = False
+      if data['quiz_category']['id'] == 0:
+        selection = Question.query.order_by(func.random()).all()
+        formatted_question = quiz_question(selection, previous_questions)
+      else:
+        selection = Question.query.filter(Question.category == data['quiz_category']['id']).order_by(func.random()).all()
+        formatted_question = quiz_question(selection, previous_questions)
+
+      if formatted_question is None: # end the game if it doesn't have more question
+        force_end = True
+
+      return jsonify({
+          'question': formatted_question,
+          'forceEnd': force_end
+      })
+    except:
+      abort(422)
 
   '''
   @TODO: 
