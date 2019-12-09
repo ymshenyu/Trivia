@@ -135,8 +135,13 @@ def create_app(test_config=None):
     if 'searchTerm' in data:
       # search questions based on search term
       selection = Question.query.filter(Question.question.ilike(f"%{data['searchTerm']}%")).order_by(Question.id).all()
+      formatted_questions = pagination_questions(request, selection)
+
+      if not len(formatted_questions):
+        abort(404)
+        
       return jsonify({
-        'questions': pagination_questions(request, selection),
+        'questions': formatted_questions,
         'total_questions': len(selection),
         'current_category': current_category(selection)
       })

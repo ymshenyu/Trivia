@@ -112,6 +112,7 @@ Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` d
 #### DELETE /questions/{question_id}
 - General:
     - Deletes the specified question based on given id. Returns the success value.
+    - Request Argument: ```None``` 
 - Sample: ```curl -X DELETE localhost:5000/questions/2```
 ```
 {
@@ -122,7 +123,9 @@ Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` d
 #### POST /questions
 - General:
     - If ```searchTerm``` provided in POST request. Returns the questions which match the ```searchTerm``` value, current category and total number of questions.
+      - Request Argument: ```page```
     - If ```searchTerm``` not provided. Creates a new question using the the submitted question, answer, category and difficulty. Returns the success value.
+      - Request Argument: ```None```
 - Sample:
     - ```curl -X POST -H "Content-Type: application/json" -d '{"searchTerm": "boxer"}' localhost:5000/questions```(provide searchTerm)
         ```
@@ -153,6 +156,7 @@ Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` d
 #### GET /categories/{category_id}/questions
 - General:
   - Returns questions based on category, current category and total number of questions.
+  - Request Argument: ```page```
 - Sample:```curl localhost:5000/categories/1/questions```
 ```
 {
