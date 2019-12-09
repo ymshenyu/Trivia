@@ -52,20 +52,6 @@ Setting the `FLASK_ENV` variable to `development` will detect file changes and r
 
 Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` directory and the `__init__.py` file to find the application. 
 
-## Tasks
-
-One note before you delve into your tasks: for each endpoint you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior. 
-
-1. Use Flask-CORS to enable cross-domain requests and set response headers. 
-2. Create an endpoint to handle GET requests for questions, including pagination (every 10 questions). This endpoint should return a list of questions, number of total questions, current category, categories. 
-3. Create an endpoint to handle GET requests for all available categories. 
-4. Create an endpoint to DELETE question using a question ID. 
-5. Create an endpoint to POST a new question, which will require the question and answer text, category, and difficulty score. 
-6. Create a POST endpoint to get questions based on category. 
-7. Create a POST endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question. 
-8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
-9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
-
 REVIEW_COMMENT
 ```
 This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
@@ -88,6 +74,128 @@ GET '/categories'
 '6' : "Sports"}
 
 ```
+
+## API Reference
+
+### Endpoints
+
+#### GET /categories
+- General:
+    - Returns a dictionary of categories.
+    - Request Argument: ```None```
+- Sample: ```curl localhost:5000/categories```
+```
+{'1' : "Science",
+'2' : "Art",
+'3' : "Geography",
+'4' : "History",
+'5' : "Entertainment",
+'6' : "Sports"}
+```
+
+#### GET /questions
+- Genreal:
+    - Returns a dictionary of questions, categories, total number of questions, and current categories.
+    - Results are painated in groups of 2. Include a request argument to choose page number, starting from 1.
+    - Request Argument: ```page```
+- Sample:
+    - ```curl localhost:5000/questions``` (without request argument)
+    - ```curl localhost:5000/questions?page=1```(with request argument)
+```
+{
+  "categories": {
+    "1": "Science", 
+    "2": "Art", 
+    "3": "Geography", 
+    "4": "History", 
+    "5": "Entertainment", 
+    "6": "Sports"
+  }, 
+  "current_category": [
+    "Entertainment", 
+    "History", 
+    "Sports", 
+    "Geography", 
+    "Art", 
+    "Science"
+  ], 
+  "questions": [
+    {
+      "answer": "Apollo 13", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    }
+  ], 
+  "total_questions": 19
+}
+```
+
+#### DELETE /questions/{question_id}
+- General:
+    - Deletes the specified question based on given id. Returns the success value.
+- Sample: ```curl -X DELETE localhost:5000/questions/2```
+```
+{
+  "success": true
+}
+```
+
+#### POST /questions
+- General:
+    - If ```searchTerm``` provided in POST request. Returns the questions which match the ```searchTerm``` value, current category and total number of questions.
+    - If ```searchTerm``` not provided. Creates a new question using the the submitted question, answer, category and difficulty. Returns the success value.
+- Sample:
+    - ```curl -X POST -H "Content-Type: application/json" -d '{"searchTerm": "boxer"}' localhost:5000/questions```(provide searchTerm)
+        ```
+        {
+          "current_category": [
+              "History"
+            ], 
+          "questions": [
+              {
+              "answer": "Muhammad Ali", 
+              "category": 4, 
+              "difficulty": 1, 
+              "id": 9, 
+              "question": "What boxer's original name is Cassius Clay?"
+              }
+            ], 
+          "total_questions": 1
+        }
+        ```
+    - ```curl -X POST -H "Content-Type: application/json" -d '{"question": "Who was the first president of the USA?", "answer": "George Washington", "category": 4, "difficulty": 1}' localhost:5000/questions```
+        ```
+        {
+            "success": true
+        }
+
+        ```
+
+#### GET /categories/{category_id}/questions
+- General:
+  - Returns questions based on category, current category and total number of questions.
+- Sample:```curl localhost:5000/categories/1/questions```
+```
+{
+  "current_category": [
+    "Science"
+  ], 
+  "questions": [
+    {
+      "answer": "The Liver", 
+      "category": 1, 
+      "difficulty": 4, 
+      "id": 20, 
+      "question": "What is the heaviest organ in the human body?"
+    }
+  ], 
+  "total_questions": 3
+}
+
+```
+
 
 
 ## Testing
