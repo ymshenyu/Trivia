@@ -92,7 +92,7 @@ def create_app(test_config=None):
     selection = Question.query.order_by(Question.id).all()
     formatted_questions = pagination_questions(request, selection)
 
-    if len(selection) == 0 or len(formatted_questions) == 0:
+    if not len(formatted_questions):
       abort(404)
 
     return jsonify({
@@ -160,7 +160,7 @@ def create_app(test_config=None):
     selection = Question.query.filter(Question.category == category_id).all()
     formatted_questions = pagination_questions(request, selection)
 
-    if len(selection) == 0 or len(formatted_questions) == 0:
+    if not len(formatted_questions):
       abort(404)
 
     return jsonify({
@@ -223,7 +223,7 @@ def create_app(test_config=None):
       'code': 422,
       'success': False,
       'message': 'unprocessable'
-    })
+    }), 422
 
   @app.errorhandler(405)
   def method_not_allowed(error):
@@ -231,7 +231,7 @@ def create_app(test_config=None):
       'code': 405,
       'success': False,
       'message': 'method not allowed'
-    })
+    }), 405
 
   @app.errorhandler(500)
   def internal_server_error(error):
@@ -239,7 +239,7 @@ def create_app(test_config=None):
       'code': 500,
       'success': False,
       'message': 'internal server error'
-    })
+    }), 500
   
   return app
 
