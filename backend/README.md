@@ -177,6 +177,25 @@ Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` d
 
 ```
 
+#### POST /quizzes
+- General:
+  - Returns a dictionary of the question and forceEnd value
+  - Request Argument: ```None```
+- Sample:```curl -X POST -H "Content-Type: application/json" -d '{"previous_questions": [], "quiz_category": {"type": "Science", "id": "1"}}' localhost:5000/quizzes```
+```
+{
+  "forceEnd": false, 
+  "question": {
+    "answer": "The Liver", 
+    "category": 1, 
+    "difficulty": 4, 
+    "id": 20, 
+    "question": "What is the heaviest organ in the human body?"
+  }
+}
+
+```
+
 
 
 ## Testing
