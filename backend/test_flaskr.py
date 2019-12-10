@@ -45,6 +45,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertLessEqual(len(data['questions']), 10)
         self.assertTrue(data)
 
+    def test_get_paginated_questions_failed(self):
+        res = self.client().get('/questions?page=1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data['success'])
+        self.assertEqual(
+            data['message'], "The requested resource doesn't exist.")
+
     def test_delete_question(self):
         res = self.client().delete('/questions/2')
         data = json.loads(res.data)
@@ -52,6 +61,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data)
         self.assertTrue(data['success'])
+
+    def test_delete_question_failed(self):
+        res = self.client().delete('/questions/1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data['success'])
+        self.assertEqual(
+            data['message'], "The requested resource doesn't exist.")
 
     def test_create_question(self):
         res = self.client().post('/questions', json={
@@ -67,6 +85,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data)
         self.assertTrue(data['success'])
 
+    def test_create_question_failed(self):
+        res = self.client().post('/questions', json={
+            'question': [],
+            'answer': [],
+            'category': [],
+            'difficulty': []
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['message'], 'unprocessable')
+
     def test_search_question(self):
         res = self.client().post('/questions', json={'searchTerm': 'boxer'})
         data = json.loads(res.data)
@@ -76,6 +107,16 @@ class TriviaTestCase(unittest.TestCase):
         self.assertLessEqual(len(data['questions']), 10)
         self.assertIn('boxer', data['questions'][0]['question'])
 
+    def test_search_question_failed(self):
+        res = self.client().post(
+            '/questions', json={'searchTerm': 'not exist'})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data['success'])
+        self.assertEqual(
+            data['message'], "The requested resource doesn't exist.")
+
     def test_get_questions_based_on_category(self):
         res = self.client().get('/categories/1/questions')
         data = json.loads(res.data)
@@ -83,6 +124,30 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data)
         self.assertLessEqual(len(data['questions']), 10)
+
+    def test_quiz(self):
+        res = self.client().post('/quizzes', json={
+            'previous_questions': [],
+            'quiz_category':
+            {'type': 'Science', 'id': '1'}
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data)
+
+    def test_quiz_failed(self):
+        res = self.client().post('/quizzes', json={
+            'previous_questions': [],
+            'quiz_category':
+            {'type': 'Not Exist', 'id': '10000'}
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data['success'])
+        self.assertEqual(
+            data['message'], "The requested resource doesn't exist.")
 
     def test_404_if_questions_does_not_exist(self):
         res = self.client().get('/categories/1000/questions')

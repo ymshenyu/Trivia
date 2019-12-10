@@ -95,7 +95,7 @@ def create_app(test_config=None):
             question.delete()
             return jsonify({'success': True})
         except Exception:
-            abort(405)
+            abort(404)
 
     @app.route('/questions', methods=['POST'])
     def create_question():
@@ -105,18 +105,25 @@ def create_app(test_config=None):
             selection = Question.query.filter(Question.question.ilike(
                 f"%{data['searchTerm']}%")).order_by(Question.id).all()
             formatted_questions = pagination_questions(request, selection)
+
+            if not len(formatted_questions):
+                abort(404)
+
             return jsonify({
                 'questions': formatted_questions,
                 'total_questions': len(selection),
                 'current_category': current_category(selection)
             })
         else:
-            question = Question(question=data['question'],
-                                answer=data['answer'],
-                                category=data['category'],
-                                difficulty=data['difficulty'])
-            question.insert()
-            return jsonify({'success': True})
+            try:
+                question = Question(question=data['question'],
+                                    answer=data['answer'],
+                                    category=data['category'],
+                                    difficulty=data['difficulty'])
+                question.insert()
+                return jsonify({'success': True})
+            except Exception:
+                abort(422)
 
     @app.route('/categories/<int:category_id>/questions')
     def get_questions(category_id):
@@ -159,7 +166,7 @@ def create_app(test_config=None):
                 'forceEnd': force_end
             })
         except Exception:
-            abort(422)
+            abort(404)
 
     @app.errorhandler(404)
     def not_found(error):
